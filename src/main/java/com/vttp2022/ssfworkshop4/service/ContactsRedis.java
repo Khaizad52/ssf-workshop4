@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.vttp2022.ssfworkshop4.model.Contact;
 
 @Service
-public class ContactsRedis implements ContactsRepo{
+public class ContactsRedis implements ContactsRepo {
     private static final Logger logger = LoggerFactory.getLogger(ContactsRedis.class);
 
     @Autowired
@@ -17,13 +17,30 @@ public class ContactsRedis implements ContactsRepo{
 
     @Override
     public void save(final Contact ctc) {
-        redisTemplate.opsForValue().set(ctc.getId(), ctc);
+        // redisTemplate.opsForValue().set(ctc.getId(), ctc);
+        redisTemplate.opsForList().rightPush(ctc.getId(), ctc.getName());
+        redisTemplate.opsForList().rightPush(ctc.getId(), ctc.getEmail());
+        redisTemplate.opsForList().rightPush(ctc.getId(), ctc.getPhoneNumber());
     }
 
     @Override
     public Contact findById(final String contactId) {
-        Contact result = (Contact) redisTemplate.opsForValue().get(contactId);
-        logger.info(">>> " + result.getEmail());
-        return result;
+        // Contact result = (Contact) redisTemplate.opsForValue().get(contactId);
+        String name = (String) redisTemplate.opsForList().index(contactId, 0);
+        String email = (String) redisTemplate.opsForList().index(contactId, 1);
+        Integer phoneNumber = (Integer) redisTemplate.opsForList().index(contactId, 2);
+        logger.info(">>> name " + name);
+        logger.info(">>> email " + email);
+        logger.info(">>> phoneNumber " + phoneNumber);
+        
+
+        Contact ct = new Contact();
+        ct.setId(contactId);
+        ct.setName(name);
+        ct.setEmail(email);
+        ct.setPhoneNumber(phoneNumber.intValue());
+
+        return ct;
     }
 }
+
